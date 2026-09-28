@@ -1,26 +1,33 @@
 # PROGRESS
 
-Phase: 1 / 5
+Phase: 2-3 / 5 (Core Business + AI)
 
-Status: foundation scaffolded and ready for local dev
+Status: Core business features and AI integration in progress
+
 What is done:
-- Next.js + TypeScript + Tailwind app created
-- Prisma schema with auth, org, membership, subscription and core business entities
-- Register/login/logout and current-org APIs built
-- Dashboard shell and starter pages created
-- Seed users and demo org created
-- Docker Compose for Postgres added
-- .env.example and README prepared
+- Lead CRM CRUD routes and pages
+- Invoice CRUD with GST-ready schema
+- AI provider abstraction (mock, OpenAI, Anthropic)
+- Sales message generator API and UI
+- Billing limits enforcement (leads, invoices, AI messages)
+- Pricing page with plan details
+- Full auth and org isolation
+- Test suite for invoice calculations
+- Seed data with demo users and orgs
 
 What is next:
-- Run install, migrate, seed, and start the app locally
-- Validate auth flow and org-isolation test
-- Prepare Phase 2 feature work after user says "next"
+- Complete remaining pages: customers, support KB, marketing generator, admin panel
+- Add webhook for Razorpay (mock mode in dev, real mode in prod)
+- Polish UI: empty states, error handlers, loading states
+- Final build + typecheck + test pass
+- Generate mobile APK and web builds
 
 Known issues:
-- Local DB is SQLite by default for zero-setup dev; Postgres is still configured for deployment via docker-compose
-- This is a Phase 1 foundation only; features beyond auth/dashboard are intentionally minimal
+- Mock AI provider returns templated responses
+- Razorpay integration not yet complete
+- Admin panel routes defined but not UI
 
 Key decisions:
-- Chose SQLite for the default dev database to keep the app runnable in one step
-- Kept the schema Postgres-compatible to align with the PRD while optimizing local ease of use
+- Using SQLite locally, Postgres-compatible schema for production
+- AI providers abstracted so any can be swapped via env vars
+- Invoice calculations use integer math (paise) for accuracy
