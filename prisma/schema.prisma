@@ -1,0 +1,179 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  PLATFORM_ADMIN
+}
+
+enum OrganizationStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  STAFF
+}
+
+enum SubscriptionStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  PROPOSAL_SENT
+  WON
+  LOST
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  globalRole   UserRole  @default(USER)
+  organizations Membership[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Organization {
+  id               String             @id @default(cuid())
+  name             String
+  slug             String             @unique
+  industry         String?
+  phone            String?
+  address          String?
+  preferredLanguage String            @default("en")
+  status           OrganizationStatus @default(ACTIVE)
+  memberships      Membership[]
+  subscriptions    Subscription[]
+  leads            Lead[]
+  customers        Customer[]
+  invoices         Invoice[]
+  kbItems          SupportKnowledgeBaseItem[]
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Membership {
+  id             String        @id @default(cuid())
+  userId         String
+  organizationId String
+  role           MembershipRole @default(STAFF)
+  user           User          @relation(fields: [userId], references: [id])
+  organization   Organization  @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime      @default(now())
+
+  @@unique([userId, organizationId])
+  @@index([organizationId])
+}
+
+model SubscriptionPlan {
+  id                String        @id @default(cuid())
+  name              String
+  priceMonthly      Int
+  currency          String        @default("INR")
+  aiMessageLimit    Int
+  leadLimit         Int
+  invoiceLimit      Int
+  features          String
+  subscriptions     Subscription[]
+  createdAt         DateTime      @default(now())
+}
+
+model Subscription {
+  id                    String             @id @default(cuid())
+  organizationId        String
+  planId                String
+  status                SubscriptionStatus @default(TRIALING)
+  currentPeriodStart    DateTime
+  currentPeriodEnd      DateTime
+  razorpayCustomerId    String?
+  razorpaySubscriptionId String?
+  organization          Organization       @relation(fields: [organizationId], references: [id])
+  plan                  SubscriptionPlan   @relation(fields: [planId], references: [id])
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+}
+
+model Customer {
+  id             String      @id @default(cuid())
+  organizationId String
+  name           String
+  phone          String?
+  email          String?
+  address        String?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  invoices       Invoice[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Lead {
+  id               String      @id @default(cuid())
+  organizationId   String
+  name             String
+  phone            String?
+  email            String?
+  source           String?
+  status           LeadStatus  @default(NEW)
+  estimatedValue   Int?
+  notes            String?
+  nextFollowUpAt   DateTime?
+  organization     Organization @relation(fields: [organizationId], references: [id])
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+model SupportKnowledgeBaseItem {
+  id             String      @id @default(cuid())
+  organizationId String
+  title          String
+  content        String
+  category       String?
+  language       String      @default("en")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+model Invoice {
+  id             String      @id @default(cuid())
+  organizationId String
+  customerId     String?
+  invoiceNumber  String
+  status         String      @default("UNPAID")
+  subtotal       Int
+  taxAmount      Int
+  total          Int
+  dueDate        DateTime?
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  customer       Customer?   @relation(fields: [customerId], references: [id])
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+}
+
+model AuditLog {
+  id            String      @id @default(cuid())
+  organizationId String?
+  userId        String?
+  action        String
+  entityType    String?
+  entityId      String?
+  metadata      String?
+  createdAt     DateTime    @default(now())
+}
